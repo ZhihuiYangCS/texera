@@ -1,7 +1,6 @@
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import '../../../common/rxjs-operators';
 import { CustomNgMaterialModule } from '../../../common/custom-ng-material.module';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 

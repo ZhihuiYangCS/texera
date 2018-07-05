@@ -13,14 +13,14 @@ import { marbles } from 'rxjs-marbles';
 import { mockExecutionResult, mockResultData,
   mockExecutionErrorResult, mockExecutionEmptyResult } from '../../service/execute-workflow/mock-result-data';
 import { By } from '@angular/platform-browser';
-import { Observable } from 'rxjs/Observable';
+import { Observable ,  of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
 
 class StubHttpClient {
   constructor() {}
 
-  public post(): Observable<string> { return Observable.of('a'); }
+  public post(): Observable<string> { return of('a'); }
 }
 
 describe('ResultPanelComponent', () => {
@@ -177,7 +177,7 @@ describe('ResultPanelComponent', () => {
 
     const httpClient: HttpClient = TestBed.get(HttpClient);
     spyOn(httpClient, 'post').and.returnValue(
-      Observable.of(mockExecutionResult)
+      of(mockExecutionResult)
     );
 
     executeWorkflowService.getExecuteEndedStream().subscribe();

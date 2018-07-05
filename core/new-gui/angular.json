@@ -148,5 +148,10 @@
     "@schematics/angular:directive": {
       "prefix": "texera"
     }
+  },
+  "cli": {
+    "warnings": {
+      "typescriptMismatch": false
+    }
   }
 }

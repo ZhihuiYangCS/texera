@@ -1,17 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
+import { Observable, of } from 'rxjs';
 
 import { mockOperatorMetaData } from './mock-operator-metadata.data';
 import { OperatorMetadata } from '../../types/operator-schema.interface';
 
-import '../../../common/rxjs-operators';
+import { shareReplay } from 'rxjs/operators';
 
 @Injectable()
 export class StubOperatorMetadataService {
 
-  private operatorMetadataObservable = Observable
-    .of(mockOperatorMetaData)
-    .shareReplay(1);
+  private operatorMetadataObservable = of(mockOperatorMetaData).pipe(
+    shareReplay(1));
 
   constructor() { }
 

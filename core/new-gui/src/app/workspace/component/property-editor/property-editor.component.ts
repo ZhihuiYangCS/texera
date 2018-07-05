@@ -4,15 +4,14 @@ import { WorkflowActionService } from './../../service/workflow-graph/model/work
 import { OperatorMetadataService } from './../../service/operator-metadata/operator-metadata.service';
 import { Component } from '@angular/core';
 
-import { Subject } from 'rxjs/Subject';
-import { Observable } from 'rxjs/Observable';
-import '../../../common/rxjs-operators';
+import { Subject, Observable } from 'rxjs';
 
 // all lodash import should follow this parttern
 // import `functionName` from `lodash-es/functionName`
 // to import only the function that we use
 import cloneDeep from 'lodash-es/cloneDeep';
 import isEqual from 'lodash-es/isEqual';
+import { filter, map, debounceTime, distinctUntilChanged, share } from 'rxjs/operators';
 
 
 /**
@@ -162,16 +161,16 @@ export class PropertyEditorComponent {
    * On unhighlight -> hides the form
    */
   public handleHighlightEvents() {
-    this.workflowActionService.getJointGraphWrapper().getJointCellHighlightStream()
-      .filter(value => value.operatorID !== this.currentOperatorID)
-      .map(value => this.workflowActionService.getTexeraGraph().getOperator(value.operatorID))
-      .subscribe(
+    this.workflowActionService.getJointGraphWrapper().getJointCellHighlightStream().pipe(
+      filter(value => value.operatorID !== this.currentOperatorID),
+      map(value => this.workflowActionService.getTexeraGraph().getOperator(value.operatorID))
+    ).subscribe(
         operator => this.changePropertyEditor(operator)
       );
 
-    this.workflowActionService.getJointGraphWrapper().getJointCellUnhighlightStream()
-      .filter(value => value.operatorID === this.currentOperatorID)
-      .subscribe(() => this.clearPropertyEditor());
+    this.workflowActionService.getJointGraphWrapper().getJointCellUnhighlightStream().pipe(
+      filter(value => value.operatorID === this.currentOperatorID)
+    ).subscribe(() => this.clearPropertyEditor());
   }
 
   /**
@@ -185,15 +184,15 @@ export class PropertyEditorComponent {
    */
   public createOutputFormChangeEventStream(originalSourceFormChangeEvent: Observable<object>): Observable<object> {
 
-    return originalSourceFormChangeEvent
+    return originalSourceFormChangeEvent.pipe(
       // set a debounce time to avoid events triggering too often
       //  and to circumvent a bug of the library - each action triggers event twice
-      .debounceTime(PropertyEditorComponent.formInputDebounceTime)
+      debounceTime(PropertyEditorComponent.formInputDebounceTime),
       // don't emit the event until the data is changed
-      .distinctUntilChanged()
+      distinctUntilChanged(),
       // don't emit the event if form data is same with current actual data
       // also check for other unlikely circumstances (see below)
-      .filter(formData => {
+      filter(formData => {
         // check if the current operator ID still exists
         // the user could un-select this operator during debounce time
         if (!this.currentOperatorID) {
@@ -213,10 +212,10 @@ export class PropertyEditorComponent {
           return false;
         }
         return true;
-      })
+      }),
       // share() because the original observable is a hot observable
-      .share();
-
+      share()
+    );
   }
 
   /**

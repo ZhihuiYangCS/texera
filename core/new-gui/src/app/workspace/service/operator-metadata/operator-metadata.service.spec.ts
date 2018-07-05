@@ -3,10 +3,10 @@ import { TestBed, inject } from '@angular/core/testing';
 import { HttpClient } from '@angular/common/http';
 import { OperatorMetadataService, EMPTY_OPERATOR_METADATA } from './operator-metadata.service';
 
-import { Observable } from 'rxjs/Observable';
+import { Observable ,  of } from 'rxjs';
 
-import '../../../common/rxjs-operators';
 import { mockOperatorMetaData } from './mock-operator-metadata.data';
+import { delay, first, last } from 'rxjs/operators';
 
 
 class StubHttpClient {
@@ -14,7 +14,7 @@ class StubHttpClient {
 
   // fake an async http response with a very small delay
   public get(url: string): Observable<any> {
-    return Observable.of(mockOperatorMetaData).delay(1);
+    return of(mockOperatorMetaData).pipe(delay(1));
   }
 }
 
@@ -40,19 +40,19 @@ describe('OperatorMetadataService', () => {
   });
 
   it('should emit an empty operator metadata first', () => {
-    service.getOperatorMetadata().first().subscribe(
+    service.getOperatorMetadata().pipe(first()).subscribe(
       value => expect(<any>value).toEqual(EMPTY_OPERATOR_METADATA)
     );
   });
 
   it('should send http request once', () => {
-    service.getOperatorMetadata().last().subscribe(
+    service.getOperatorMetadata().pipe(last()).subscribe(
       value => expect(<any>value).toBeTruthy()
     );
   });
 
   it('should check if operatorType exists correctly', () => {
-    service.getOperatorMetadata().last().subscribe(
+    service.getOperatorMetadata().pipe(last()).subscribe(
       () => {
         expect(service.operatorTypeExists('ScanSource')).toBeTruthy();
         expect(service.operatorTypeExists('InvalidOperatorType')).toBeFalsy();

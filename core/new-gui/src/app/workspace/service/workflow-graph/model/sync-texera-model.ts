@@ -1,3 +1,4 @@
+import { map, filter, tap } from 'rxjs/operators';
 import { OperatorLink } from './../../../types/workflow-common.interface';
 
 import { WorkflowGraph } from './workflow-graph';
@@ -38,9 +39,9 @@ export class SyncTexeraModel {
    *  link delete events and cause texera link to be deleted.
    */
   private handleJointOperatorDelete(): void {
-    this.jointGraphWrapper.getJointOperatorCellDeleteStream()
-      .map(element => element.id.toString())
-      .subscribe(elementID => this.texeraGraph.deleteOperator(elementID));
+    this.jointGraphWrapper.getJointOperatorCellDeleteStream().pipe(
+      map(element => element.id.toString())
+    ).subscribe(elementID => this.texeraGraph.deleteOperator(elementID));
   }
 
   /**
@@ -68,19 +69,19 @@ export class SyncTexeraModel {
      * we need to check if the link is a valid link in Texera's semantic (has both source and target port)
      *  and only add valid links to the graph
      */
-    this.jointGraphWrapper.getJointLinkCellAddStream()
-      .filter(link => SyncTexeraModel.isValidJointLink(link))
-      .map(link => SyncTexeraModel.getOperatorLink(link))
-      .subscribe(link => this.texeraGraph.addLink(link));
+    this.jointGraphWrapper.getJointLinkCellAddStream().pipe(
+      filter(link => SyncTexeraModel.isValidJointLink(link)),
+      map(link => SyncTexeraModel.getOperatorLink(link))
+    ).subscribe(link => this.texeraGraph.addLink(link));
 
     /**
      * on link cell delete:
      * we need to first check if the link is a valid link
      *  then delete the link by the link ID
      */
-    this.jointGraphWrapper.getJointLinkCellDeleteStream()
-      .filter(link => SyncTexeraModel.isValidJointLink(link))
-      .subscribe(link => this.texeraGraph.deleteLinkWithID(link.id.toString()));
+    this.jointGraphWrapper.getJointLinkCellDeleteStream().pipe(
+      filter(link => SyncTexeraModel.isValidJointLink(link))
+    ).subscribe(link => this.texeraGraph.deleteLinkWithID(link.id.toString()));
 
 
     /**
@@ -88,15 +89,15 @@ export class SyncTexeraModel {
      * link cell change could cause deletion of a link or addition of a link, or simply no effect
      * TODO: finish this documentation
      */
-    this.jointGraphWrapper.getJointLinkCellChangeStream()
+    this.jointGraphWrapper.getJointLinkCellChangeStream().pipe(
       // we intentially want the side effect (delete the link) to happen **before** other operations in the chain
-      .do((link) => {
+      tap((link) => {
         const linkID = link.id.toString();
         if (this.texeraGraph.hasLinkWithID(linkID)) { this.texeraGraph.deleteLinkWithID(linkID); }
-      })
-      .filter(link => SyncTexeraModel.isValidJointLink(link))
-      .map(link => SyncTexeraModel.getOperatorLink(link))
-      .subscribe(link => {
+      }),
+      filter(link => SyncTexeraModel.isValidJointLink(link)),
+      map(link => SyncTexeraModel.getOperatorLink(link))
+    ).subscribe(link => {
         this.texeraGraph.addLink(link);
       });
   }
@@ -108,18 +109,18 @@ export class SyncTexeraModel {
    */
   static getOperatorLink(jointLink: joint.dia.Link): OperatorLink {
 
-    type jointLinkEndpointType = {id: string, port: string} | null | undefined;
+    type jointLinkEndpointType = { id: string, port: string } | null | undefined;
 
     // the link should be a valid link (both source and target are connected to an operator)
     // isValidLink function is not reused because of Typescript strict null checking
     const jointSourceElement: jointLinkEndpointType = jointLink.attributes.source;
     const jointTargetElement: jointLinkEndpointType = jointLink.attributes.target;
 
-    if (! jointSourceElement) {
+    if (!jointSourceElement) {
       throw new Error(`Invalid JointJS Link: no source element`);
     }
 
-    if (! jointTargetElement) {
+    if (!jointTargetElement) {
       throw new Error(`Invalid JointJS Link: no target element`);
     }
 

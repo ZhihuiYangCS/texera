@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 
-import { Subject } from 'rxjs/Subject';
-import { Observable } from 'rxjs/Observable';
-import './../../../common/rxjs-operators';
+import { Subject ,  Observable } from 'rxjs';
 import { AppSettings } from './../../../common/app-setting';
 
 import { WorkflowActionService } from './../workflow-graph/model/workflow-action.service';

@@ -9,6 +9,7 @@ import { StubOperatorMetadataService } from '../operator-metadata/stub-operator-
 import { mockOperatorMetaData } from '../operator-metadata/mock-operator-metadata.data';
 
 import { marbles } from 'rxjs-marbles';
+import { map } from 'rxjs/operators';
 
 describe('DragDropService', () => {
 
@@ -74,7 +75,7 @@ describe('DragDropService', () => {
 
     dragDropService.handleOperatorDropEvent();
 
-    const addOperatorStream = workflowActionService.getTexeraGraph().getOperatorAddStream().map(() => 'a');
+    const addOperatorStream = workflowActionService.getTexeraGraph().getOperatorAddStream().pipe(map(() => 'a'));
 
     const expectedStream = m.hot('-a-');
     m.expect(addOperatorStream).toBeObservable(expectedStream);

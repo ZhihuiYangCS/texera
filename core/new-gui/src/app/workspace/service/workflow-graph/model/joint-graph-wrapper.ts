@@ -1,5 +1,6 @@
-import { Subject } from 'rxjs/Subject';
-import { Observable } from 'rxjs/Observable';
+import { Point } from './../../../types/workflow-common.interface';
+import { map, filter, tap } from 'rxjs/operators';
+import { Subject, Observable, fromEvent } from 'rxjs';
 
 type operatorIDType = { operatorID: string };
 
@@ -27,24 +28,28 @@ export class JointGraphWrapper {
   private currentHighlightedOperator: string | undefined;
   // event stream of highlighting an operator
   private jointCellHighlightStream = new Subject<operatorIDType>();
-    // event stream of un-highlighting an operator
+  // event stream of un-highlighting an operator
   private jointCellUnhighlightStream = new Subject<operatorIDType>();
 
   /**
    * This will capture all events in JointJS
    *  involving the 'add' operation
    */
-  private jointCellAddStream = Observable
-    .fromEvent(this.jointGraph, 'add')
-    .map(value => <joint.dia.Cell>value);
+  private jointCellAddStream =
+  fromEvent<[joint.dia.Cell, joint.dia.CellView, object]>(this.jointGraph, 'add')
+    .pipe(
+      map(value => value[0])
+    );
 
   /**
    * This will capture all events in JointJS
    *  involving the 'remove' operation
    */
-  private jointCellDeleteStream = Observable
-    .fromEvent(this.jointGraph, 'remove')
-    .map(value => <joint.dia.Cell>value);
+  private jointCellDeleteStream =
+  fromEvent<[joint.dia.Cell, joint.dia.CellView, object]>(this.jointGraph, 'remove')
+    .pipe(
+      map(value => value[0])
+    );
 
 
   constructor(private jointGraph: joint.dia.Graph) {
@@ -121,9 +126,10 @@ export class JointGraphWrapper {
    * Returns an Observable stream capturing the operator cell delete event in JointJS graph.
    */
   public getJointOperatorCellDeleteStream(): Observable<joint.dia.Element> {
-    const jointOperatorDeleteStream = this.jointCellDeleteStream
-      .filter(cell => cell.isElement())
-      .map(cell => <joint.dia.Element>cell);
+    const jointOperatorDeleteStream = this.jointCellDeleteStream.pipe(
+      filter(cell => cell.isElement()),
+      map(cell => <joint.dia.Element>cell)
+    );
     return jointOperatorDeleteStream;
   }
 
@@ -136,9 +142,10 @@ export class JointGraphWrapper {
    *
    */
   public getJointLinkCellAddStream(): Observable<joint.dia.Link> {
-    const jointLinkAddStream = this.jointCellAddStream
-      .filter(cell => cell.isLink())
-      .map(cell => <joint.dia.Link>cell);
+    const jointLinkAddStream = this.jointCellAddStream.pipe(
+      filter(cell => cell.isLink()),
+      map(cell => <joint.dia.Link>cell)
+    );
 
     return jointLinkAddStream;
   }
@@ -152,9 +159,10 @@ export class JointGraphWrapper {
    *
    */
   public getJointLinkCellDeleteStream(): Observable<joint.dia.Link> {
-    const jointLinkDeleteStream = this.jointCellDeleteStream
-      .filter(cell => cell.isLink())
-      .map(cell => <joint.dia.Link>cell);
+    const jointLinkDeleteStream = this.jointCellDeleteStream.pipe(
+      filter(cell => cell.isLink()),
+      map(cell => <joint.dia.Link>cell)
+    );
 
     return jointLinkDeleteStream;
   }
@@ -168,9 +176,11 @@ export class JointGraphWrapper {
    *  - one end of the link is moved from one point to another point in the paper
    */
   public getJointLinkCellChangeStream(): Observable<joint.dia.Link> {
-    const jointLinkChangeStream = Observable
-      .fromEvent(this.jointGraph, 'change:source change:target')
-      .map(value => <joint.dia.Link>value);
+    const jointLinkChangeStream =
+    fromEvent<[joint.dia.Link, Point, object]>(this.jointGraph, 'change:source change:target')
+      .pipe(
+        map(value => value[0])
+      );
 
     return jointLinkChangeStream;
   }

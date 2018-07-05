@@ -13,6 +13,7 @@ import {
 
 import * as joint from 'jointjs';
 import { StubOperatorMetadataService } from '../../operator-metadata/stub-operator-metadata.service';
+import { tap, map, share } from 'rxjs/operators';
 
 describe('JointGraphWrapperService', () => {
 
@@ -38,9 +39,9 @@ describe('JointGraphWrapperService', () => {
 
     jointGraph.addCell(jointUIService.getJointOperatorElement(mockScanPredicate, mockPoint));
 
-    m.hot('-e-').do(() => jointGraph.getCell(mockScanPredicate.operatorID).remove()).subscribe();
+    m.hot('-e-').pipe(tap(() => jointGraph.getCell(mockScanPredicate.operatorID).remove())).subscribe();
 
-    const jointOperatorDeleteStream = jointGraphWrapper.getJointOperatorCellDeleteStream().map(() => 'e');
+    const jointOperatorDeleteStream = jointGraphWrapper.getJointOperatorCellDeleteStream().pipe(map(() => 'e'));
     const expectedStream = m.hot('-e-');
 
     m.expect(jointOperatorDeleteStream).toBeObservable(expectedStream);
@@ -55,9 +56,9 @@ describe('JointGraphWrapperService', () => {
 
     const mockScanResultLinkCell = JointUIService.getJointLinkCell(mockScanResultLink);
 
-    m.hot('-e-').do(() => jointGraph.addCell(mockScanResultLinkCell)).subscribe();
+    m.hot('-e-').pipe(tap(() => jointGraph.addCell(mockScanResultLinkCell))).subscribe();
 
-    const jointLinkAddStream = jointGraphWrapper.getJointLinkCellAddStream().map(() => 'e');
+    const jointLinkAddStream = jointGraphWrapper.getJointLinkCellAddStream().pipe(map(() => 'e'));
     const expectedStream = m.hot('-e-');
 
     m.expect(jointLinkAddStream).toBeObservable(expectedStream);
@@ -73,9 +74,9 @@ describe('JointGraphWrapperService', () => {
     const mockScanResultLinkCell = JointUIService.getJointLinkCell(mockScanResultLink);
     jointGraph.addCell(mockScanResultLinkCell);
 
-    m.hot('---e-').do(() => jointGraph.getCell(mockScanResultLink.linkID).remove()).subscribe();
+    m.hot('---e-').pipe(tap(() => jointGraph.getCell(mockScanResultLink.linkID).remove())).subscribe();
 
-    const jointLinkDeleteStream = jointGraphWrapper.getJointLinkCellDeleteStream().map(() => 'e');
+    const jointLinkDeleteStream = jointGraphWrapper.getJointLinkCellDeleteStream().pipe(map(() => 'e'));
     const expectedStream = m.hot('---e-');
 
     m.expect(jointLinkDeleteStream).toBeObservable(expectedStream);
@@ -99,10 +100,10 @@ describe('JointGraphWrapperService', () => {
       const mockScanResultLinkCell = JointUIService.getJointLinkCell(mockScanResultLink);
       jointGraph.addCell(mockScanResultLinkCell);
 
-      m.hot('-e-').do(() => jointGraph.getCell(mockScanPredicate.operatorID).remove()).subscribe();
+      m.hot('-e-').pipe(tap(() => jointGraph.getCell(mockScanPredicate.operatorID).remove())).subscribe();
 
-      const jointOperatorDeleteStream = jointGraphWrapper.getJointOperatorCellDeleteStream().map(() => 'e');
-      const jointLinkDeleteStream = jointGraphWrapper.getJointLinkCellDeleteStream().map(() => 'e');
+      const jointOperatorDeleteStream = jointGraphWrapper.getJointOperatorCellDeleteStream().pipe(map(() => 'e'));
+      const jointLinkDeleteStream = jointGraphWrapper.getJointLinkCellDeleteStream().pipe(map(() => 'e'));
 
       const expectedStream = '-e-';
 
@@ -129,10 +130,10 @@ describe('JointGraphWrapperService', () => {
       jointGraph.addCell(mockScanSentimentLinkCell);
       jointGraph.addCell(mockSentimentResultLinkCell);
 
-      m.hot('-e--').do(() => jointGraph.getCell(mockSentimentPredicate.operatorID).remove()).subscribe();
+      m.hot('-e--').pipe(tap(() => jointGraph.getCell(mockSentimentPredicate.operatorID).remove())).subscribe();
 
-      const jointOperatorDeleteStream = jointGraphWrapper.getJointOperatorCellDeleteStream().map(() => 'e');
-      const jointLinkDeleteStream = jointGraphWrapper.getJointLinkCellDeleteStream().map(() => 'e');
+      const jointOperatorDeleteStream = jointGraphWrapper.getJointOperatorCellDeleteStream().pipe(map(() => 'e'));
+      const jointLinkDeleteStream = jointGraphWrapper.getJointLinkCellDeleteStream().pipe(map(() => 'e'));
 
       const expectedStream = '-e--';
       const expectedMultiStream = '-(ee)--';
@@ -153,7 +154,7 @@ describe('JointGraphWrapperService', () => {
     const highlightActionMarbleEvent = m.hot(
       '-a-|',
       { a: mockScanPredicate.operatorID }
-    ).share();
+    ).pipe(share());
 
     // highlight that operator at events
     highlightActionMarbleEvent.subscribe(
@@ -187,7 +188,7 @@ describe('JointGraphWrapperService', () => {
     localJointGraphWrapper.highlightOperator(mockScanPredicate.operatorID);
 
     // prepare marble operation for unhighlighting an operator
-    const unhighlightActionMarbleEvent = m.hot('-a-|').share();
+    const unhighlightActionMarbleEvent = m.hot('-a-|').pipe(share());
 
     // unhighlight that operator at events
     unhighlightActionMarbleEvent.subscribe(
@@ -222,7 +223,7 @@ describe('JointGraphWrapperService', () => {
     const highlightActionMarbleEvent = m.hot(
       '-a-b-|',
       { a: mockScanPredicate.operatorID, b: mockResultPredicate.operatorID }
-    ).share();
+    ).pipe(share());
 
 
     // highlight that operator at events
@@ -258,7 +259,7 @@ describe('JointGraphWrapperService', () => {
     const highlightActionMarbleEvent = m.hot(
       '-a-b-|',
       { a: mockScanPredicate.operatorID, b: mockScanPredicate.operatorID }
-    ).share();
+    ).pipe(share());
 
 
     // highlight that operator at events
@@ -287,7 +288,7 @@ describe('JointGraphWrapperService', () => {
     expect(localJointGraphWrapper.getCurrentHighlightedOpeartorID()).toEqual(mockScanPredicate.operatorID);
 
     // prepare the delete operator action marble test
-    const deleteOperatorActionMarble = m.hot('-a-').share();
+    const deleteOperatorActionMarble = m.hot('-a-').pipe(share());
     deleteOperatorActionMarble.subscribe(
       () => workflowActionService.deleteOperator(mockScanPredicate.operatorID)
     );

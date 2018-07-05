@@ -3,10 +3,10 @@ import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { JointUIService } from './../../service/joint-ui/joint-ui.service';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
 import { Component, AfterViewInit } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import '../../../common/rxjs-operators';
+import { Observable, fromEvent } from 'rxjs';
 
 import * as joint from 'jointjs';
+import { auditTime, map, filter, tap } from 'rxjs/operators';
 
 /**
  * WorkflowEditorComponent is the componenet for the main workflow editor part of the UI.
@@ -75,8 +75,10 @@ export class WorkflowEditorComponent implements AfterViewInit {
   }
 
   private handleWindowResize(): void {
-    // when the window is resized (limit to at most one event every 1000ms)
-    Observable.fromEvent(window, 'resize').auditTime(1000).subscribe(
+    // when the window is resized (limit to at most one event every 500ms)
+    fromEvent(window, 'resize').pipe(
+      auditTime(500)
+    ).subscribe(
       () => {
         // reset the origin cooredinates
         this.setJointPaperOriginOffset();
@@ -97,10 +99,12 @@ export class WorkflowEditorComponent implements AfterViewInit {
    */
   private handleHighlightMouseInput(): void {
     // on user mouse clicks a operator cell, highlight that operator
-    Observable.fromEvent(this.getJointPaper(), 'cell:pointerclick')
-      .map(value => <joint.dia.CellView>value)
-      .filter(cellView => cellView.model.isElement())
-      .subscribe(cellView => this.workflowActionService.getJointGraphWrapper().highlightOperator(cellView.model.id.toString()));
+    fromEvent<[joint.dia.CellView, JQuery.Event, number, number]>(this.getJointPaper(), 'cell:pointerclick').pipe(
+      map(value => value[0]),
+      filter(cellView => cellView.model.isElement())
+    ).subscribe(
+      cellView => this.workflowActionService.getJointGraphWrapper().highlightOperator(cellView.model.id.toString())
+    );
 
     /**
      * One possible way to unhighlight an operator when user clicks on the blank area,
@@ -169,10 +173,9 @@ export class WorkflowEditorComponent implements AfterViewInit {
    */
   private handleViewDeleteOperator(): void {
     // bind the delete button event to call the delete operator function in joint model action
-    Observable
-      .fromEvent(this.getJointPaper(), 'element:delete')
-      .map(value => <joint.dia.ElementView>value)
-      .subscribe(
+    fromEvent<[joint.dia.ElementView, JQuery.Event, number, number]>(this.getJointPaper(), 'element:delete').pipe(
+      map(value => value[0])
+    ).subscribe(
         elementView => {
           this.workflowActionService.deleteOperator(elementView.model.id.toString());
         }

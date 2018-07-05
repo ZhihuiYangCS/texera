@@ -1,3 +1,4 @@
+import { tap, map } from 'rxjs/operators';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
@@ -11,14 +12,14 @@ import { StubOperatorMetadataService } from '../../service/operator-metadata/stu
 import { OperatorMetadataService } from '../../service/operator-metadata/operator-metadata.service';
 import { JointUIService } from '../../service/joint-ui/joint-ui.service';
 
-import { Observable } from 'rxjs/Observable';
+import { Observable ,  of } from 'rxjs';
 import { marbles } from 'rxjs-marbles';
 import { HttpClient } from '@angular/common/http';
 import { mockExecutionResult } from '../../service/execute-workflow/mock-result-data';
 
 class StubHttpClient {
 
-  public post<T>(): Observable<string> { return Observable.of('a'); }
+  public post<T>(): Observable<string> { return of('a'); }
 
 }
 
@@ -58,14 +59,14 @@ describe('NavigationComponent', () => {
 
     const httpClient: HttpClient = TestBed.get(HttpClient);
     spyOn(httpClient, 'post').and.returnValue(
-      Observable.of(mockExecutionResult)
+      of(mockExecutionResult)
     );
 
 
     const runButtonElement = fixture.debugElement.query(By.css('.texera-workspace-navigation-run'));
-    m.hot('-e-').do(event => runButtonElement.triggerEventHandler('click', null)).subscribe();
+    m.hot('-e-').pipe(tap(event => runButtonElement.triggerEventHandler('click', null))).subscribe();
 
-    const executionEndStream = executeWorkFlowService.getExecuteEndedStream().map(value => 'e');
+    const executionEndStream = executeWorkFlowService.getExecuteEndedStream().pipe(map(value => 'e'));
 
     const expectedStream = '-e-';
     m.expect(executionEndStream).toBeObservable(expectedStream);
@@ -76,7 +77,7 @@ describe('NavigationComponent', () => {
 
     const httpClient: HttpClient = TestBed.get(HttpClient);
     spyOn(httpClient, 'post').and.returnValue(
-      Observable.of(mockExecutionResult)
+      of(mockExecutionResult)
     );
 
     // expect initially there is no spinner
@@ -85,7 +86,7 @@ describe('NavigationComponent', () => {
     let spinner = fixture.debugElement.query(By.css('.texera-loading-spinner'));
     expect(spinner).toBeFalsy();
 
-    m.hot('-e-').do(() => component.onClickRun()).subscribe();
+    m.hot('-e-').pipe(tap(() => component.onClickRun())).subscribe();
 
     executeWorkFlowService.getExecuteStartedStream().subscribe(
       () => {

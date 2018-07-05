@@ -1,3 +1,5 @@
+
+import {throwError as observableThrowError,  Observable ,  of } from 'rxjs';
 import { ExecutionResult } from '../../types/execute-workflow.interface';
 import { TestBed, inject } from '@angular/core/testing';
 
@@ -7,7 +9,6 @@ import { WorkflowActionService } from './../workflow-graph/model/workflow-action
 import { OperatorMetadataService } from '../operator-metadata/operator-metadata.service';
 import { StubOperatorMetadataService } from '../operator-metadata/stub-operator-metadata.service';
 import { JointUIService } from '../joint-ui/joint-ui.service';
-import { Observable } from 'rxjs/Observable';
 
 import { mockExecutionResult } from './mock-result-data';
 import { mockWorkflowPlan, mockLogicalPlan } from './mock-workflow-plan';
@@ -15,13 +16,14 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { marbles } from 'rxjs-marbles';
 import { WorkflowGraph } from '../workflow-graph/model/workflow-graph';
 import { LogicalPlan } from '../../types/execute-workflow.interface';
+import { map, tap } from 'rxjs/operators';
 
 
 class StubHttpClient {
 
   constructor() {}
 
-  public post(): Observable<string> { return Observable.of('a'); }
+  public post(): Observable<string> { return of('a'); }
 
 }
 
@@ -57,9 +59,9 @@ describe('ExecuteWorkflowService', () => {
 
   it('should notify execution start event stream when an execution begins', marbles((m) => {
     const executionStartStream = service.getExecuteStartedStream()
-      .map(() => 'a');
+      .pipe(map(() => 'a'));
 
-    m.hot('-a-').do(() => service.executeWorkflow()).subscribe();
+    m.hot('-a-').pipe(tap(() => service.executeWorkflow())).subscribe();
 
     const expectedStream = m.hot('-a-');
 
@@ -69,10 +71,10 @@ describe('ExecuteWorkflowService', () => {
 
   it('should notify execution end event stream when a correct result is passed from backend', marbles((m) => {
     const executionEndStream = service.getExecuteEndedStream()
-      .map(() => 'a');
+      .pipe(map(() => 'a'));
 
     // execute workflow at this time
-    m.hot('-a-').do(() => service.executeWorkflow()).subscribe();
+    m.hot('-a-').pipe(tap(() => service.executeWorkflow())).subscribe();
 
     const expectedStream = m.hot('-a-');
 
@@ -83,7 +85,7 @@ describe('ExecuteWorkflowService', () => {
   it('should call post function when executing workflow', () => {
     const httpClient: HttpClient = TestBed.get(HttpClient);
     const postMethodSpy = spyOn(httpClient, 'post').and.returnValue(
-      Observable.of(mockExecutionResult)
+      of(mockExecutionResult)
     );
 
     service.executeWorkflow();
@@ -97,7 +99,7 @@ describe('ExecuteWorkflowService', () => {
 
     const httpClient: HttpClient = TestBed.get(HttpClient);
     spyOn(httpClient, 'post').and.returnValue(
-      Observable.throw({
+      observableThrowError({
         status: 400,
         error: {
           code: 1,
@@ -124,7 +126,7 @@ describe('ExecuteWorkflowService', () => {
 
     const httpClient: HttpClient = TestBed.get(HttpClient);
     spyOn(httpClient, 'post').and.returnValue(
-      Observable.throw({
+      observableThrowError({
         status: 500,
         error: {
           code: 1,
@@ -154,7 +156,7 @@ describe('ExecuteWorkflowService', () => {
     const progressEvent: ProgressEvent = new ProgressEvent(mockErrorMessage, undefined);
 
     spyOn(httpClient, 'post').and.returnValue(
-      Observable.throw(new HttpErrorResponse(
+      observableThrowError(new HttpErrorResponse(
         {
           error: progressEvent,
           headers: undefined,
