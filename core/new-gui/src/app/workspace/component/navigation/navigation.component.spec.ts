@@ -62,8 +62,7 @@ describe('NavigationComponent', () => {
       of(mockExecutionResult)
     );
 
-
-    const runButtonElement = fixture.debugElement.query(By.css('.texera-workspace-navigation-run'));
+    const runButtonElement = fixture.debugElement.query(By.css('.texera-navigation-run-button'));
     m.hot('-e-').pipe(tap(event => runButtonElement.triggerEventHandler('click', null))).subscribe();
 
     const executionEndStream = executeWorkFlowService.getExecuteEndedStream().pipe(map(value => 'e'));
@@ -83,7 +82,7 @@ describe('NavigationComponent', () => {
     // expect initially there is no spinner
 
     expect(component.showSpinner).toBeFalsy();
-    let spinner = fixture.debugElement.query(By.css('.texera-loading-spinner'));
+    let spinner = fixture.debugElement.query(By.css('.texera-navigation-loading-spinner'));
     expect(spinner).toBeFalsy();
 
     m.hot('-e-').pipe(tap(() => component.onClickRun())).subscribe();
@@ -92,7 +91,7 @@ describe('NavigationComponent', () => {
       () => {
         fixture.detectChanges();
         expect(component.showSpinner).toBeTruthy();
-        spinner = fixture.debugElement.query(By.css('.texera-loading-spinner'));
+        spinner = fixture.debugElement.query(By.css('.texera-navigation-loading-spinner'));
         expect(spinner).toBeTruthy();
       }
     );
@@ -101,7 +100,7 @@ describe('NavigationComponent', () => {
       () => {
         fixture.detectChanges();
         expect(component.showSpinner).toBeFalsy();
-        spinner = fixture.debugElement.query(By.css('.texera-loading-spinner'));
+        spinner = fixture.debugElement.query(By.css('.texera-navigation-loading-spinner'));
         expect(spinner).toBeFalsy();
       }
     );

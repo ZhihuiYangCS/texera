@@ -9,8 +9,6 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { marbles } from 'rxjs-marbles';
 
-import '../../../../common/rxjs-operators';
-
 import * as joint from 'jointjs';
 
 

@@ -14,12 +14,11 @@ import { StubOperatorMetadataService } from './../../service/operator-metadata/s
 import { JointUIService } from './../../service/joint-ui/joint-ui.service';
 
 import { mockOperatorSchemaList } from './../../service/operator-metadata/mock-operator-metadata.data';
-
-import { marbles } from 'rxjs-marbles';
-
-
 import { mockResultPredicate, mockScanPredicate, mockPoint } from '../../service/workflow-graph/model/mock-workflow-data';
 import { CustomNgMaterialModule } from '../../../common/custom-ng-material.module';
+
+import { configure } from 'rxjs-marbles/mocha';
+const { cases, marbles } = configure({ run: false });
 
 /* tslint:disable:no-non-null-assertion */
 
